@@ -13,7 +13,6 @@ public class TelepathyController : MonoBehaviour
 
     void Update()
     {
-        // Visualize the raycast
         Vector3 raycastOrigin = Camera.main.transform.position;
         Vector3 raycastDirection = Camera.main.transform.forward;
         Debug.DrawRay(raycastOrigin, raycastDirection * maxGrabDistance, Color.green);
@@ -74,8 +73,8 @@ public class TelepathyController : MonoBehaviour
             Debug.Log("Object thrown: " + grabbedObject.name);
             Rigidbody rb = grabbedObject.GetComponent<Rigidbody>();
 
-            rb.isKinematic = false;
-            rb.detectCollisions = true;
+            rb.isKinematic = false; 
+            rb.detectCollisions = true; 
 
             grabbedObject.transform.SetParent(null);
 
