@@ -2,17 +2,18 @@ using UnityEngine;
 
 public class TelepathyController : MonoBehaviour
 {
-    public float pullForce = 10f;
     public float throwForce = 20f;
     public float maxGrabDistance = 10f;
     public Transform holdPosition;
     public LayerMask grabbableLayer;
+    public float throwAngle = 30f;
 
     private GameObject grabbedObject;
     private bool isHoldingObject = false;
 
     void Update()
     {
+        // Visualize the raycast
         Vector3 raycastOrigin = Camera.main.transform.position;
         Vector3 raycastDirection = Camera.main.transform.forward;
         Debug.DrawRay(raycastOrigin, raycastDirection * maxGrabDistance, Color.green);
@@ -52,9 +53,11 @@ public class TelepathyController : MonoBehaviour
                 Debug.Log("Object grabbed: " + hit.collider.name);
                 grabbedObject = hit.collider.gameObject;
 
-                rb.isKinematic = true; 
-                rb.detectCollisions = false; 
+                // Disable physics interactions
+                rb.isKinematic = true; // Disable physics simulation
+                rb.detectCollisions = false; // Disable collisions
 
+                // Make the object a child of the hold position
                 grabbedObject.transform.SetParent(holdPosition);
 
                 isHoldingObject = true;
@@ -78,10 +81,25 @@ public class TelepathyController : MonoBehaviour
 
             grabbedObject.transform.SetParent(null);
 
-            rb.AddForce(Camera.main.transform.forward * throwForce, ForceMode.Impulse);
+            Vector3 throwDirection = CalculateThrowDirection();
+
+            rb.AddForce(throwDirection * throwForce, ForceMode.Impulse);
 
             grabbedObject = null;
             isHoldingObject = false;
         }
+    }
+
+    Vector3 CalculateThrowDirection()
+    {
+        Vector3 cameraForward = Camera.main.transform.forward;
+
+        // Calculate the upward angle based on the throwAngle
+        float angleInRadians = throwAngle * Mathf.Deg2Rad; // Convert angle to radians
+        Vector3 throwDirection = cameraForward + Vector3.up * Mathf.Tan(angleInRadians);
+
+        throwDirection.Normalize();
+
+        return throwDirection;
     }
 }

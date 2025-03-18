@@ -5,9 +5,9 @@ public class EnemyManager : MonoBehaviour
 {
     public Transform player;
     public float moveSpeed = 3.5f;
-    public float punchRange = 2f; 
+    public float punchRange = 2f;
     public float punchCooldown = 2f; 
-    public int health = 1;
+    public int health = 1; 
 
     private float lastPunchTime;
     private bool isDowned = false; 
@@ -16,14 +16,23 @@ public class EnemyManager : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+
+        // Disable gravity initially (enemy is standing/moving)
+        if (rb != null)
+        {
+            rb.useGravity = false;
+            rb.isKinematic = true; 
+        }
     }
 
     void Update()
     {
         if (isDowned) return;
 
+        // Move towards the player
         transform.position = Vector3.MoveTowards(transform.position, player.position, moveSpeed * Time.deltaTime);
 
+        // Check if the enemy is close enough to punch the player
         if (Vector3.Distance(transform.position, player.position) <= punchRange)
         {
             PunchPlayer();
@@ -37,7 +46,6 @@ public class EnemyManager : MonoBehaviour
             Debug.Log("Enemy punched the player!");
             lastPunchTime = Time.time;
 
-            // Check if the punch hits the player
             if (Vector3.Distance(transform.position, player.position) <= punchRange)
             {
                 KillPlayer();
@@ -48,49 +56,44 @@ public class EnemyManager : MonoBehaviour
     void KillPlayer()
     {
         Debug.Log("Player died! Resetting scene...");
+        // Reset the scene
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    public void TakeDamage()
+    public void TakeDamage(Vector3 impactForce)
     {
         health--;
         if (health <= 0)
         {
-            DownEnemy();
+            DownEnemy(impactForce);
         }
     }
 
-    void DownEnemy()
+    void DownEnemy(Vector3 impactForce)
     {
         Debug.Log("Enemy downed!");
-        isDowned = true; 
+        isDowned = true;
 
         moveSpeed = 0f;
 
-        // Allow the enemy to fall realistically
         if (rb != null)
         {
-            rb.isKinematic = false; 
-            rb.useGravity = true; 
+            rb.isKinematic = false;
+            rb.useGravity = true;
+
+            rb.AddForce(impactForce, ForceMode.Impulse);
         }
 
-        // Freeze the Rigidbody after a short delay
-        Invoke("FreezeRigidbody", 2f);
+        Invoke("DestroyEnemy", 2f);
     }
 
-    void FreezeRigidbody()
+    void DestroyEnemy()
     {
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero; 
-            rb.angularVelocity = Vector3.zero; 
-            rb.isKinematic = true; 
-        }
+        Destroy(this.gameObject);
     }
 
     void OnDrawGizmosSelected()
     {
-        // Draw the punch range in the Scene view
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, punchRange);
     }
